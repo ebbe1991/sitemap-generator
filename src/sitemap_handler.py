@@ -18,6 +18,10 @@ def handle(event: dict, context: dict):
     return app.resolve(event, context)
 
 
+@app.get("/sitemap.xml")
+def getXML():
+    return get()
+
 @app.get("/api/sitemap")
 def get():
     routes = [
