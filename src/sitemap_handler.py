@@ -9,6 +9,7 @@ from aws_lambda_powertools.event_handler import Response
 DOMAIN = os.getenv("DOMAIN")
 TENANT = os.getenv("TENANT")
 DYNAMIC_BLOG_ROUTES_URL = os.getenv("DYNAMIC_BLOG_ROUTES_URL")
+DYNAMIC_BLOG_PREFIX = os.getenv("DYNAMIC_BLOG_PREFIX")
 PAGES = os.getenv("PAGES")
 app = APIGatewayHttpResolver()
 
@@ -28,7 +29,9 @@ def get():
 
     if DYNAMIC_BLOG_ROUTES_URL is not None:
         try:
-            dynamic_routes = get_dynamic_blog_routes(TENANT, DYNAMIC_BLOG_ROUTES_URL)
+            dynamic_routes = get_dynamic_blog_routes(
+                tenant=TENANT, prefix=DYNAMIC_BLOG_PREFIX, url=DYNAMIC_BLOG_ROUTES_URL
+            )
             routes.extend(dynamic_routes)
         except Exception as e:
             print(f"Error fetching dynamic routes: {e}")
@@ -45,14 +48,10 @@ def get():
 
     xml += "</urlset>"
 
-    return Response(
-        status_code=200,
-        content_type='application/xml',
-        body=xml
-    )
+    return Response(status_code=200, content_type="application/xml", body=xml)
 
 
-def get_dynamic_blog_routes(tenant, url):
+def get_dynamic_blog_routes(tenant, prefix, url):
     headers = {"x-tenant-id": tenant}
 
     req = urllib.request.Request(url, headers=headers)
@@ -64,7 +63,7 @@ def get_dynamic_blog_routes(tenant, url):
 
             dynamic_routes = []
             for item in data:
-                path = f"/aktuelles/{item}"
+                path = f"/{prefix}/{item}"
                 dynamic_routes.append(
                     {"path": path, "priority": 0.9, "changefreq": "weekly"}
                 )
